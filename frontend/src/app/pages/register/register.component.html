@@ -1,0 +1,133 @@
+<div class="auth-page">
+  <div class="auth-bg">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+  </div>
+
+  <div class="auth-container animate-scale-in">
+    <div class="auth-branding">
+      <div class="branding-content">
+        <div class="brand-logo">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <h1 class="brand-title">DocuMind</h1>
+        <p class="brand-subtitle">Join thousands of teams managing documents with AI</p>
+        <div class="brand-stats">
+          <div class="stat-item">
+            <span class="stat-value">10K+</span>
+            <span class="stat-label">Active Users</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">1M+</span>
+            <span class="stat-label">Documents</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">99.9%</span>
+            <span class="stat-label">Uptime</span>
+          </div>
+        </div>
+      </div>
+      <div class="branding-glow"></div>
+    </div>
+
+    <div class="auth-form-panel">
+      <div class="auth-form-wrapper">
+        <h2 class="auth-title">Create account</h2>
+        <p class="auth-subtitle">Start your document management journey</p>
+
+        <div class="error-banner" *ngIf="errorMessage">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <div class="form-group">
+            <label class="form-label" for="name">Full Name</label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">person</mat-icon>
+              <input id="name" type="text" class="form-input with-icon" formControlName="name"
+                     placeholder="John Doe" [class.error]="f['name'].touched && f['name'].invalid" />
+            </div>
+            <span class="form-error" *ngIf="f['name'].touched && f['name'].errors?.['required']">Name is required</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="reg-email">Email Address</label>
+            <div class="input-wrapper">
+              <mat-icon class="input-icon">email</mat-icon>
+              <input id="reg-email" type="email" class="form-input with-icon" formControlName="email"
+                     placeholder="you@company.com" [class.error]="f['email'].touched && f['email'].invalid" />
+            </div>
+            <span class="form-error" *ngIf="f['email'].touched && f['email'].errors?.['required']">Email is required</span>
+            <span class="form-error" *ngIf="f['email'].touched && f['email'].errors?.['email']">Enter a valid email</span>
+          </div>
+
+          <div class="form-row-2col">
+            <div class="form-group">
+              <label class="form-label" for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <mat-icon class="input-icon">lock</mat-icon>
+                <input id="reg-password" [type]="showPassword ? 'text' : 'password'" class="form-input with-icon"
+                       formControlName="password" placeholder="Min 8 characters"
+                       [class.error]="f['password'].touched && f['password'].invalid" />
+                <button type="button" class="toggle-password" (click)="togglePassword('password')">
+                  <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </div>
+              <span class="form-error" *ngIf="f['password'].touched && f['password'].errors?.['minlength']">Min 8 characters</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="confirm-password">Confirm</label>
+              <div class="input-wrapper">
+                <mat-icon class="input-icon">lock</mat-icon>
+                <input id="confirm-password" [type]="showConfirmPassword ? 'text' : 'password'" class="form-input with-icon"
+                       formControlName="confirmPassword" placeholder="Confirm password"
+                       [class.error]="f['confirmPassword'].touched && f['confirmPassword'].errors" />
+                <button type="button" class="toggle-password" (click)="togglePassword('confirm')">
+                  <mat-icon>{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                </button>
+              </div>
+              <span class="form-error" *ngIf="f['confirmPassword'].touched && f['confirmPassword'].errors?.['mismatch']">Passwords don't match</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="department">Department (Optional)</label>
+            <select id="department" class="form-select" formControlName="department">
+              <option value="">Select department</option>
+              <option value="engineering">Engineering</option>
+              <option value="marketing">Marketing</option>
+              <option value="sales">Sales</option>
+              <option value="hr">Human Resources</option>
+              <option value="finance">Finance</option>
+              <option value="legal">Legal</option>
+              <option value="operations">Operations</option>
+            </select>
+          </div>
+
+          <label class="checkbox-label mb-lg">
+            <input type="checkbox" formControlName="agreeTerms" />
+            <span class="checkbox-custom"></span>
+            <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+          </label>
+
+          <button type="submit" class="btn btn-primary btn-lg w-full" [disabled]="isLoading">
+            <span *ngIf="!isLoading">Create Account</span>
+            <span *ngIf="isLoading" class="btn-loading">
+              <span class="spinner-sm"></span>
+              Creating account...
+            </span>
+          </button>
+        </form>
+
+        <p class="auth-footer">
+          Already have an account? <a routerLink="/login">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

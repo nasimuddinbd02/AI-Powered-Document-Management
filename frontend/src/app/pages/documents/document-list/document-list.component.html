@@ -1,0 +1,166 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="docs-header animate-fade-in-up">
+    <div>
+      <h1 class="page-title">Documents</h1>
+      <p class="page-subtitle">Manage and organize your documents</p>
+    </div>
+    <a routerLink="/documents/upload" class="btn btn-primary">
+      <mat-icon>cloud_upload</mat-icon>
+      Upload
+    </a>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="docs-toolbar glass-card-static animate-fade-in-up">
+    <div class="search-bar">
+      <mat-icon>search</mat-icon>
+      <input type="text" placeholder="Search documents..." [(ngModel)]="searchQuery" (keydown.enter)="onSearch()" />
+    </div>
+
+    <div class="toolbar-actions">
+      <div class="sort-dropdown" [matMenuTriggerFor]="sortMenu">
+        <mat-icon>sort</mat-icon>
+        <span>Sort</span>
+        <mat-icon class="dropdown-icon">expand_more</mat-icon>
+      </div>
+
+      <mat-menu #sortMenu="matMenu">
+        <button *ngFor="let opt of sortOptions" mat-menu-item (click)="onSortChange(opt.value)">
+          <mat-icon *ngIf="currentSort === opt.value">{{ currentSortOrder === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+          <mat-icon *ngIf="currentSort !== opt.value"></mat-icon>
+          <span>{{ opt.label }}</span>
+        </button>
+      </mat-menu>
+
+      <div class="view-toggle">
+        <button class="btn-icon" [class.active]="store.viewMode() === 'grid'" (click)="toggleView('grid')">
+          <mat-icon>grid_view</mat-icon>
+        </button>
+        <button class="btn-icon" [class.active]="store.viewMode() === 'list'" (click)="toggleView('list')">
+          <mat-icon>view_list</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <app-loading-spinner *ngIf="store.isLoading()" message="Loading documents..."></app-loading-spinner>
+
+  <!-- Empty State -->
+  <app-empty-state
+    *ngIf="store.isEmpty()"
+    icon="folder_open"
+    title="No documents found"
+    message="Upload your first document to get started with AI-powered document management">
+    <a routerLink="/documents/upload" class="btn btn-primary">
+      <mat-icon>cloud_upload</mat-icon>
+      Upload Document
+    </a>
+  </app-empty-state>
+
+  <!-- Grid View -->
+  <div class="docs-grid stagger-children" *ngIf="!store.isLoading() && store.documents().length > 0 && store.viewMode() === 'grid'">
+    <a *ngFor="let doc of store.documents()" [routerLink]="['/documents', doc.uuid]" class="doc-card glass-card animate-fade-in-up">
+      <div class="doc-card-header">
+        <div class="doc-file-icon" [style.color]="doc.fileName | fileIcon:'color'">
+          <mat-icon>{{ doc.fileName | fileIcon }}</mat-icon>
+        </div>
+        <button class="btn-icon doc-menu-btn" [matMenuTriggerFor]="docMenu" (click)="$event.stopPropagation(); $event.preventDefault()">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #docMenu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>download</mat-icon>
+            <span>Download</span>
+          </button>
+          <button mat-menu-item>
+            <mat-icon>share</mat-icon>
+            <span>Share</span>
+          </button>
+          <button mat-menu-item (click)="deleteDocument(doc, $event)">
+            <mat-icon>delete</mat-icon>
+            <span>Delete</span>
+          </button>
+        </mat-menu>
+      </div>
+
+      <h3 class="doc-card-title">{{ doc.title }}</h3>
+      <p class="doc-card-meta">{{ doc.fileSize | fileSize }} · {{ doc.createdAt | timeAgo }}</p>
+
+      <div class="doc-card-footer">
+        <div class="doc-card-tags">
+          <span *ngFor="let tag of doc.tags?.slice(0, 2)" class="doc-tag" [style.background]="tag.color + '20'" [style.color]="tag.color">
+            {{ tag.name }}
+          </span>
+        </div>
+        <div class="doc-card-indicators">
+          <mat-icon *ngIf="doc.aiProcessed" class="indicator ai" matTooltip="AI Processed">auto_awesome</mat-icon>
+          <mat-icon class="indicator access" [matTooltip]="doc.accessLevel">{{ getAccessIcon(doc.accessLevel) }}</mat-icon>
+        </div>
+      </div>
+
+      <div class="doc-card-owner">
+        <div class="owner-avatar">
+          {{ doc.owner?.name?.charAt(0) || 'U' }}
+        </div>
+        <span class="owner-name">{{ doc.owner?.name }}</span>
+      </div>
+    </a>
+  </div>
+
+  <!-- List View -->
+  <div class="docs-table glass-card-static animate-fade-in-up" *ngIf="!store.isLoading() && store.documents().length > 0 && store.viewMode() === 'list'">
+    <div class="table-header">
+      <span class="th-name">Name</span>
+      <span class="th-owner">Owner</span>
+      <span class="th-size">Size</span>
+      <span class="th-date">Modified</span>
+      <span class="th-actions"></span>
+    </div>
+    <a *ngFor="let doc of store.documents()" [routerLink]="['/documents', doc.uuid]" class="table-row">
+      <div class="td-name">
+        <div class="doc-file-icon-sm" [style.color]="doc.fileName | fileIcon:'color'">
+          <mat-icon>{{ doc.fileName | fileIcon }}</mat-icon>
+        </div>
+        <div class="td-name-info">
+          <span class="td-title">{{ doc.title }}</span>
+          <div class="td-tags">
+            <span *ngFor="let tag of doc.tags?.slice(0, 2)" class="doc-tag-sm" [style.color]="tag.color">{{ tag.name }}</span>
+          </div>
+        </div>
+      </div>
+      <span class="td-owner">{{ doc.owner?.name }}</span>
+      <span class="td-size">{{ doc.fileSize | fileSize }}</span>
+      <span class="td-date">{{ doc.createdAt | timeAgo }}</span>
+      <div class="td-actions">
+        <mat-icon *ngIf="doc.aiProcessed" class="indicator ai">auto_awesome</mat-icon>
+        <button class="btn-icon" [matMenuTriggerFor]="listDocMenu" (click)="$event.stopPropagation(); $event.preventDefault()">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #listDocMenu="matMenu">
+          <button mat-menu-item><mat-icon>download</mat-icon><span>Download</span></button>
+          <button mat-menu-item><mat-icon>share</mat-icon><span>Share</span></button>
+          <button mat-menu-item (click)="deleteDocument(doc, $event)"><mat-icon>delete</mat-icon><span>Delete</span></button>
+        </mat-menu>
+      </div>
+    </a>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="store.totalPages() > 1">
+    <button class="btn btn-ghost btn-sm" (click)="onPageChange(store.currentPage() - 1)" [disabled]="store.currentPage() === 1">
+      <mat-icon>chevron_left</mat-icon>
+      Previous
+    </button>
+    <div class="page-numbers">
+      <button *ngFor="let p of pages" class="page-btn" [class.active]="p === store.currentPage()" (click)="onPageChange(p)">
+        {{ p }}
+      </button>
+    </div>
+    <button class="btn btn-ghost btn-sm" (click)="onPageChange(store.currentPage() + 1)" [disabled]="store.currentPage() === store.totalPages()">
+      Next
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

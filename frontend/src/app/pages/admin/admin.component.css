@@ -1,0 +1,48 @@
+.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-xl); }
+
+/* Stats */
+.admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-lg); margin-bottom: var(--space-xl); }
+.admin-stat-card { padding: var(--space-lg); display: flex; gap: var(--space-lg); align-items: center; }
+.stat-icon-admin { width: 50px; height: 50px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-icon-admin[data-color="blue"] { background: rgba(59,130,246,0.12); color: var(--color-accent-blue); }
+.stat-icon-admin[data-color="emerald"] { background: rgba(16,185,129,0.12); color: var(--color-accent-emerald); }
+.stat-icon-admin[data-color="purple"] { background: rgba(139,92,246,0.12); color: var(--color-accent-purple); }
+.stat-icon-admin[data-color="cyan"] { background: rgba(6,182,212,0.12); color: var(--color-accent-cyan); }
+.stat-icon-admin mat-icon { font-size: 24px; width: 24px; height: 24px; }
+.stat-content { display: flex; flex-direction: column; }
+.stat-value-admin { font-size: var(--font-size-2xl); font-weight: 700; line-height: 1.2; }
+.stat-label-admin { font-size: var(--font-size-xs); color: var(--color-text-tertiary); }
+.stat-trend-admin { font-size: var(--font-size-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+/* Users */
+.users-section { overflow: hidden; }
+.users-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-lg); border-bottom: 1px solid var(--glass-border); }
+.section-title { font-size: var(--font-size-lg); font-weight: 600; margin: 0; }
+.users-filter { display: flex; align-items: center; gap: var(--space-sm); padding: 8px 14px; background: var(--color-bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--radius-full); }
+.users-filter mat-icon { font-size: 18px; width: 18px; height: 18px; color: var(--color-text-muted); }
+.users-filter input { border: none; background: none; color: var(--color-text-primary); font-family: var(--font-family); font-size: var(--font-size-sm); outline: none; width: 200px; }
+
+.table-head { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 0.8fr 60px; gap: var(--space-md); padding: var(--space-md) var(--space-lg); font-size: var(--font-size-xs); font-weight: 600; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--glass-border); }
+.table-row-admin { display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 0.8fr 60px; gap: var(--space-md); padding: var(--space-md) var(--space-lg); align-items: center; border-bottom: 1px solid var(--glass-border); transition: background var(--transition-fast); }
+.table-row-admin:hover { background: rgba(148,163,184,0.03); }
+.table-row-admin:last-child { border-bottom: none; }
+
+.user-cell { display: flex; align-items: center; gap: var(--space-md); }
+.user-avatar-admin { width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: var(--font-size-sm); flex-shrink: 0; }
+.user-info-admin { display: flex; flex-direction: column; min-width: 0; }
+.user-name-admin { font-size: var(--font-size-sm); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-email-admin { font-size: var(--font-size-xs); color: var(--color-text-tertiary); }
+
+.role-cell .badge { text-transform: capitalize; }
+.status-cell { display: flex; align-items: center; gap: var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-secondary); text-transform: capitalize; }
+.status-dot { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--color-text-muted); }
+.status-dot.active { background: var(--color-accent-emerald); }
+.docs-cell { font-size: var(--font-size-sm); color: var(--color-text-secondary); }
+.login-cell { font-size: var(--font-size-sm); color: var(--color-text-tertiary); }
+
+@media (max-width: 1200px) { .admin-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) {
+  .admin-stats { grid-template-columns: 1fr; }
+  .table-head, .table-row-admin { grid-template-columns: 2fr 0.8fr 60px; }
+  .status-cell, .docs-cell, .login-cell { display: none; }
+}

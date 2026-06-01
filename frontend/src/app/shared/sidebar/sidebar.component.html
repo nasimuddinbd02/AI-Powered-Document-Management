@@ -1,0 +1,48 @@
+<aside class="sidebar" [class.collapsed]="uiStore.sidebarCollapsed()">
+  <!-- Logo -->
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">
+        <mat-icon>auto_awesome</mat-icon>
+      </div>
+      <span class="logo-text" *ngIf="!uiStore.sidebarCollapsed()">DocuMind</span>
+    </div>
+    <button class="collapse-btn btn-icon" (click)="toggleSidebar()" [matTooltip]="uiStore.sidebarCollapsed() ? 'Expand' : 'Collapse'">
+      <mat-icon>{{ uiStore.sidebarCollapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of visibleNavItems" class="nav-item">
+        <a [routerLink]="item.route"
+           routerLinkActive="active"
+           [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+           class="nav-link"
+           [matTooltip]="uiStore.sidebarCollapsed() ? item.label : ''"
+           matTooltipPosition="right">
+          <div class="nav-icon">
+            <mat-icon>{{ item.icon }}</mat-icon>
+          </div>
+          <span class="nav-label" *ngIf="!uiStore.sidebarCollapsed()">{{ item.label }}</span>
+          <div class="active-indicator"></div>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- User Section -->
+  <div class="sidebar-footer" *ngIf="authService.currentUser() as user">
+    <div class="user-section">
+      <div class="user-avatar">
+        <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" />
+        <span *ngIf="!user.avatar" class="avatar-fallback">{{ user.name.charAt(0).toUpperCase() }}</span>
+      </div>
+      <div class="user-info" *ngIf="!uiStore.sidebarCollapsed()">
+        <span class="user-name">{{ user.name }}</span>
+        <span class="user-role">{{ user.role?.name || 'User' }}</span>
+      </div>
+    </div>
+  </div>
+</aside>

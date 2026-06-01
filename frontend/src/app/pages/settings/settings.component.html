@@ -1,0 +1,157 @@
+<div class="page-container">
+  <h1 class="page-title animate-fade-in-up">Settings</h1>
+  <p class="page-subtitle animate-fade-in-up">Manage your account and preferences</p>
+
+  <div class="settings-layout animate-fade-in-up">
+    <!-- Nav -->
+    <nav class="settings-nav glass-card-static">
+      <button *ngFor="let s of sections" class="settings-nav-item" [class.active]="activeSection === s.id" (click)="activeSection = s.id">
+        <mat-icon>{{ s.icon }}</mat-icon>
+        <span>{{ s.label }}</span>
+      </button>
+    </nav>
+
+    <!-- Content -->
+    <div class="settings-content">
+      <!-- Success Banner -->
+      <div class="save-banner" *ngIf="saveSuccess">
+        <mat-icon>check_circle</mat-icon>
+        <span>Changes saved successfully!</span>
+      </div>
+
+      <!-- Profile -->
+      <section class="settings-section glass-card-static" *ngIf="activeSection === 'profile'">
+        <h2 class="section-title">Profile Information</h2>
+        <p class="section-desc">Update your personal details</p>
+
+        <div class="avatar-section">
+          <div class="settings-avatar">
+            <span>{{ authService.currentUser()?.name?.charAt(0)?.toUpperCase() || 'U' }}</span>
+          </div>
+          <div class="avatar-actions">
+            <button class="btn btn-secondary btn-sm">Change Avatar</button>
+            <button class="btn btn-ghost btn-sm">Remove</button>
+          </div>
+        </div>
+
+        <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-input" formControlName="name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" formControlName="email" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <select class="form-select" formControlName="department">
+                <option value="">Select department</option>
+                <option value="engineering">Engineering</option>
+                <option value="marketing">Marketing</option>
+                <option value="sales">Sales</option>
+                <option value="hr">Human Resources</option>
+                <option value="finance">Finance</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+              {{ isSaving ? 'Saving...' : 'Save Changes' }}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Security -->
+      <section class="settings-section glass-card-static" *ngIf="activeSection === 'security'">
+        <h2 class="section-title">Security</h2>
+        <p class="section-desc">Update your password and security settings</p>
+
+        <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+          <div class="form-grid single">
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <input type="password" class="form-input" formControlName="currentPassword" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" class="form-input" formControlName="newPassword" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" class="form-input" formControlName="confirmPassword" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="isSaving">Update Password</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preferences -->
+      <section class="settings-section glass-card-static" *ngIf="activeSection === 'preferences'">
+        <h2 class="section-title">Preferences</h2>
+        <p class="section-desc">Customize your experience</p>
+
+        <div class="pref-list">
+          <div class="pref-item">
+            <div class="pref-info">
+              <h4>Dark Mode</h4>
+              <p>Use dark theme across the application</p>
+            </div>
+            <button class="toggle-switch" [class.active]="uiStore.theme() === 'dark'" (click)="toggleTheme()">
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <div class="pref-item">
+            <div class="pref-info">
+              <h4>Compact Sidebar</h4>
+              <p>Use a collapsed sidebar by default</p>
+            </div>
+            <button class="toggle-switch" [class.active]="uiStore.sidebarCollapsed()" (click)="uiStore.toggleSidebar()">
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+
+          <div class="pref-item">
+            <div class="pref-info">
+              <h4>Auto AI Summary</h4>
+              <p>Automatically generate AI summaries on upload</p>
+            </div>
+            <button class="toggle-switch active">
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifications -->
+      <section class="settings-section glass-card-static" *ngIf="activeSection === 'notifications'">
+        <h2 class="section-title">Notifications</h2>
+        <p class="section-desc">Choose what notifications you receive</p>
+
+        <div class="pref-list">
+          <div class="pref-item">
+            <div class="pref-info"><h4>Email Notifications</h4><p>Receive email for important updates</p></div>
+            <button class="toggle-switch active"><span class="toggle-knob"></span></button>
+          </div>
+          <div class="pref-item">
+            <div class="pref-info"><h4>Document Shared</h4><p>When someone shares a document with you</p></div>
+            <button class="toggle-switch active"><span class="toggle-knob"></span></button>
+          </div>
+          <div class="pref-item">
+            <div class="pref-info"><h4>AI Processing Complete</h4><p>When AI finishes analyzing a document</p></div>
+            <button class="toggle-switch active"><span class="toggle-knob"></span></button>
+          </div>
+          <div class="pref-item">
+            <div class="pref-info"><h4>Weekly Digest</h4><p>Weekly summary of document activity</p></div>
+            <button class="toggle-switch"><span class="toggle-knob"></span></button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

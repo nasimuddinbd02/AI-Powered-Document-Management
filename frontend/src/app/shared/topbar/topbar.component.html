@@ -1,0 +1,104 @@
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="btn-icon mobile-menu-btn" (click)="uiStore.toggleSidebar()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <div class="search-container">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search documents, ask AI..."
+        [(ngModel)]="searchQuery"
+        (keydown.enter)="onSearch()"
+      />
+      <div class="search-shortcut" *ngIf="!searchQuery">
+        <kbd>⌘</kbd><kbd>K</kbd>
+      </div>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <!-- AI Quick Action -->
+    <button class="btn-icon ai-btn" routerLink="/ai-assistant" matTooltip="AI Assistant">
+      <mat-icon>smart_toy</mat-icon>
+    </button>
+
+    <!-- Notifications -->
+    <button class="btn-icon notification-btn" [matMenuTriggerFor]="notificationMenu">
+      <mat-icon [matBadge]="notificationCount" matBadgeColor="warn" matBadgeSize="small"
+                [matBadgeHidden]="notificationCount === 0">
+        notifications
+      </mat-icon>
+    </button>
+
+    <mat-menu #notificationMenu="matMenu" class="notification-dropdown">
+      <div class="notification-header" (click)="$event.stopPropagation()">
+        <span class="notification-title">Notifications</span>
+        <button class="btn-ghost btn-sm">Mark all read</button>
+      </div>
+      <div class="notification-item" (click)="$event.stopPropagation()">
+        <div class="notification-icon success">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="notification-content">
+          <p class="notification-text">AI summary completed for "Q4 Report.pdf"</p>
+          <span class="notification-time">2 min ago</span>
+        </div>
+      </div>
+      <div class="notification-item" (click)="$event.stopPropagation()">
+        <div class="notification-icon info">
+          <mat-icon>cloud_upload</mat-icon>
+        </div>
+        <div class="notification-content">
+          <p class="notification-text">Document "Budget 2024.xlsx" uploaded</p>
+          <span class="notification-time">15 min ago</span>
+        </div>
+      </div>
+      <div class="notification-item" (click)="$event.stopPropagation()">
+        <div class="notification-icon warning">
+          <mat-icon>share</mat-icon>
+        </div>
+        <div class="notification-content">
+          <p class="notification-text">John shared "Project Plan" with you</p>
+          <span class="notification-time">1 hour ago</span>
+        </div>
+      </div>
+    </mat-menu>
+
+    <!-- User Menu -->
+    <button class="user-menu-btn" [matMenuTriggerFor]="userMenu" *ngIf="authService.currentUser() as user">
+      <div class="user-avatar-small">
+        <img *ngIf="user.avatar" [src]="user.avatar" [alt]="user.name" />
+        <span *ngIf="!user.avatar" class="avatar-fallback-small">{{ user.name.charAt(0).toUpperCase() }}</span>
+      </div>
+      <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu">
+      <div class="user-menu-header" (click)="$event.stopPropagation()" *ngIf="authService.currentUser() as user">
+        <div class="user-avatar-large">
+          <span class="avatar-fallback-large">{{ user.name.charAt(0).toUpperCase() }}</span>
+        </div>
+        <div class="user-menu-info">
+          <span class="user-menu-name">{{ user.name }}</span>
+          <span class="user-menu-email">{{ user.email }}</span>
+        </div>
+      </div>
+      <div class="menu-divider"></div>
+      <button mat-menu-item (click)="navigateTo('/settings')">
+        <mat-icon>person</mat-icon>
+        <span>Profile</span>
+      </button>
+      <button mat-menu-item (click)="navigateTo('/settings')">
+        <mat-icon>settings</mat-icon>
+        <span>Settings</span>
+      </button>
+      <div class="menu-divider"></div>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </div>
+</header>

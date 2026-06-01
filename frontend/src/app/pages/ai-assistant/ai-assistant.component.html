@@ -1,0 +1,112 @@
+<div class="chat-page">
+  <!-- Sidebar -->
+  <aside class="chat-sidebar glass-card-static">
+    <div class="sidebar-header">
+      <h2 class="sidebar-title">
+        <mat-icon>smart_toy</mat-icon>
+        AI Assistant
+      </h2>
+      <button class="btn btn-ghost btn-sm" (click)="clearChat()">
+        <mat-icon>add</mat-icon>
+        New Chat
+      </button>
+    </div>
+
+    <div class="chat-info">
+      <p>Ask questions about your documents. I can summarize, compare, and extract insights from your entire library.</p>
+    </div>
+
+    <div class="suggested-section">
+      <h3 class="suggested-title">Suggested Questions</h3>
+      <div class="suggested-list">
+        <button *ngFor="let q of suggestedQuestions" class="suggested-item" (click)="sendMessage(q)">
+          <mat-icon>chat_bubble_outline</mat-icon>
+          <span>{{ q }}</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat Area -->
+  <div class="chat-main">
+    <!-- Messages -->
+    <div class="chat-messages" #chatContainer>
+      <!-- Welcome State -->
+      <div *ngIf="messages.length === 0" class="chat-welcome animate-fade-in-up">
+        <div class="welcome-icon">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <h2>How can I help you today?</h2>
+        <p>Ask me anything about your documents. I can analyze, summarize, and answer questions using AI.</p>
+        <div class="welcome-chips">
+          <button *ngFor="let q of suggestedQuestions.slice(0, 3)" class="welcome-chip" (click)="sendMessage(q)">
+            <mat-icon>arrow_forward</mat-icon>
+            {{ q }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div *ngFor="let msg of messages" class="message" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
+        <div class="message-avatar">
+          <mat-icon *ngIf="msg.role === 'assistant'">auto_awesome</mat-icon>
+          <span *ngIf="msg.role === 'user'">U</span>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble">
+            <div class="message-text" [innerHTML]="formatMessage(msg.content)"></div>
+          </div>
+
+          <!-- Sources -->
+          <div class="message-sources" *ngIf="msg.sources?.length">
+            <span class="sources-label">
+              <mat-icon>source</mat-icon>
+              Sources
+            </span>
+            <div class="sources-list">
+              <a *ngFor="let src of msg.sources" [routerLink]="['/documents', src.documentId]" class="source-chip">
+                <mat-icon>description</mat-icon>
+                <span>{{ src.documentTitle }}</span>
+                <span class="source-page" *ngIf="src.pageNumber">p.{{ src.pageNumber }}</span>
+              </a>
+            </div>
+          </div>
+
+          <span class="message-time">{{ msg.timestamp | date:'shortTime' }}</span>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div *ngIf="isTyping" class="message assistant">
+        <div class="message-avatar">
+          <mat-icon>auto_awesome</mat-icon>
+        </div>
+        <div class="message-content">
+          <div class="message-bubble typing">
+            <div class="typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="chat-input-area">
+      <div class="chat-input-wrapper">
+        <textarea
+          #messageInput
+          class="chat-input"
+          placeholder="Ask me anything about your documents..."
+          [(ngModel)]="currentMessage"
+          (keydown)="onKeyDown($event)"
+          rows="1"
+        ></textarea>
+        <button class="send-btn" (click)="sendMessage()" [disabled]="!currentMessage.trim() || isTyping">
+          <mat-icon>send</mat-icon>
+        </button>
+      </div>
+      <p class="input-hint">Press Enter to send, Shift+Enter for new line</p>
+    </div>
+  </div>
+</div>

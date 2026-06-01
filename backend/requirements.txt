@@ -1,0 +1,41 @@
+# Django Core
+Django>=5.1,<6.0
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-cors-headers>=4.3,<5.0
+django-filter>=24.0,<25.0
+
+# Database
+psycopg2-binary>=2.9,<3.0
+
+# Async Tasks
+celery>=5.4,<6.0
+redis>=5.0,<6.0
+
+# Storage & Media
+django-storages>=1.14,<2.0
+Pillow>=10.0
+python-magic-bin>=0.4.14;sys_platform=="win32"
+python-magic>=0.4.27;sys_platform!="win32"
+
+# AI / LLM
+langchain>=0.2,<1.0
+langchain-openai>=0.1,<1.0
+langchain-community>=0.2,<1.0
+openai>=1.30,<2.0
+faiss-cpu>=1.8,<2.0
+tiktoken>=0.7,<1.0
+
+# OCR & Document Parsing
+pytesseract>=0.3,<1.0
+PyPDF2>=3.0,<4.0
+python-docx>=1.1,<2.0
+
+# Config & Utils
+python-decouple>=3.8,<4.0
+
+# Production Server
+gunicorn>=22.0,<23.0
+
+# API Documentation
+drf-spectacular>=0.27,<1.0

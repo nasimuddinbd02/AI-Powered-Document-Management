@@ -1,0 +1,77 @@
+<div class="page-container">
+  <div class="admin-header animate-fade-in-up">
+    <div>
+      <h1 class="page-title">Administration</h1>
+      <p class="page-subtitle">Manage users, roles, and system settings</p>
+    </div>
+    <button class="btn btn-primary">
+      <mat-icon>person_add</mat-icon>
+      Add User
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="admin-stats stagger-children">
+    <div *ngFor="let stat of adminStats" class="admin-stat-card glass-card-static animate-fade-in-up">
+      <div class="stat-icon-admin" [attr.data-color]="stat.color">
+        <mat-icon>{{ stat.icon }}</mat-icon>
+      </div>
+      <div class="stat-content">
+        <span class="stat-value-admin">{{ stat.value }}</span>
+        <span class="stat-label-admin">{{ stat.label }}</span>
+        <span class="stat-trend-admin">{{ stat.trend }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <section class="users-section glass-card-static animate-fade-in-up">
+    <div class="users-header">
+      <h2 class="section-title">User Management</h2>
+      <div class="users-filter">
+        <mat-icon>search</mat-icon>
+        <input type="text" placeholder="Search users..." />
+      </div>
+    </div>
+
+    <div class="users-table">
+      <div class="table-head">
+        <span>User</span>
+        <span>Role</span>
+        <span>Status</span>
+        <span>Documents</span>
+        <span>Last Login</span>
+        <span></span>
+      </div>
+      <div *ngFor="let user of users" class="table-row-admin">
+        <div class="user-cell">
+          <div class="user-avatar-admin">{{ user.name.charAt(0) }}</div>
+          <div class="user-info-admin">
+            <span class="user-name-admin">{{ user.name }}</span>
+            <span class="user-email-admin">{{ user.email }}</span>
+          </div>
+        </div>
+        <div class="role-cell">
+          <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">{{ user.role }}</span>
+        </div>
+        <div class="status-cell">
+          <span class="status-dot" [class.active]="user.status === 'active'"></span>
+          <span>{{ user.status }}</span>
+        </div>
+        <div class="docs-cell">{{ user.documentsCount }}</div>
+        <div class="login-cell">{{ user.lastLogin }}</div>
+        <div class="actions-cell">
+          <button class="btn-icon" [matMenuTriggerFor]="userMenu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #userMenu="matMenu">
+            <button mat-menu-item><mat-icon>edit</mat-icon><span>Edit</span></button>
+            <button mat-menu-item><mat-icon>vpn_key</mat-icon><span>Reset Password</span></button>
+            <button mat-menu-item><mat-icon>block</mat-icon><span>{{ user.status === 'active' ? 'Deactivate' : 'Activate' }}</span></button>
+            <button mat-menu-item><mat-icon>delete</mat-icon><span>Delete</span></button>
+          </mat-menu>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

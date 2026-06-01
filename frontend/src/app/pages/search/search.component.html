@@ -1,0 +1,108 @@
+<div class="page-container">
+  <div class="search-page">
+    <!-- Hero Search -->
+    <div class="search-hero animate-fade-in-up" [class.has-results]="hasSearched">
+      <div class="search-hero-content" *ngIf="!hasSearched">
+        <div class="hero-icon">
+          <mat-icon>search</mat-icon>
+        </div>
+        <h1 class="hero-title">
+          <span class="text-gradient">Intelligent</span> Document Search
+        </h1>
+        <p class="hero-subtitle">Find any document instantly with AI-powered semantic and full-text search</p>
+      </div>
+
+      <!-- Search Input -->
+      <div class="search-input-container" [class.compact]="hasSearched">
+        <mat-icon class="search-input-icon">search</mat-icon>
+        <input
+          type="text"
+          class="search-main-input"
+          placeholder="Ask a question or search for documents..."
+          [(ngModel)]="query"
+          (keydown.enter)="performSearch()"
+          autofocus
+        />
+        <button class="search-submit-btn btn btn-primary" (click)="performSearch()" [disabled]="isSearching">
+          <mat-icon>{{ isSearching ? 'hourglass_top' : 'arrow_forward' }}</mat-icon>
+        </button>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-selector">
+        <button
+          *ngFor="let mode of searchModes"
+          class="mode-btn"
+          [class.active]="searchMode === mode.value"
+          (click)="setMode($any(mode.value))"
+        >
+          <mat-icon>{{ mode.icon }}</mat-icon>
+          <span class="mode-label">{{ mode.label }}</span>
+          <span class="mode-desc">{{ mode.desc }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="search-results" *ngIf="hasSearched && !isSearching">
+      <div class="results-header">
+        <span class="results-count">{{ totalResults }} results</span>
+        <span class="results-time">in {{ processingTime | number:'1.0-3' }}s</span>
+      </div>
+
+      <div class="results-list stagger-children">
+        <a *ngFor="let result of results" [routerLink]="['/documents', result.document.uuid]" class="result-card glass-card animate-fade-in-up">
+          <div class="result-header">
+            <div class="result-icon" [style.color]="result.document.fileName | fileIcon:'color'">
+              <mat-icon>{{ result.document.fileName | fileIcon }}</mat-icon>
+            </div>
+            <div class="result-info">
+              <h3 class="result-title">{{ result.document.title }}</h3>
+              <div class="result-meta">
+                <span>{{ result.document.owner?.name }}</span>
+                <span>·</span>
+                <span>{{ result.document.createdAt | timeAgo }}</span>
+                <span>·</span>
+                <span>.{{ result.document.fileType }}</span>
+              </div>
+            </div>
+            <div class="result-score">
+              <div class="score-ring">
+                <svg viewBox="0 0 36 36">
+                  <circle class="score-bg" cx="18" cy="18" r="15.9" />
+                  <circle class="score-fill" cx="18" cy="18" r="15.9"
+                          [style.strokeDasharray]="(result.score * 100) + ', 100'" />
+                </svg>
+                <span class="score-value">{{ (result.score * 100) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="result-excerpt">{{ result.matchedContent }}</p>
+
+          <div class="result-highlights" *ngIf="result.highlights?.length">
+            <div *ngFor="let highlight of result.highlights" class="highlight-item" [innerHTML]="highlight"></div>
+          </div>
+        </a>
+      </div>
+
+      <!-- No results -->
+      <app-empty-state
+        *ngIf="results.length === 0"
+        icon="search_off"
+        title="No results found"
+        message="Try different keywords or switch to semantic search for broader results">
+      </app-empty-state>
+    </div>
+
+    <!-- Loading -->
+    <div class="search-loading" *ngIf="isSearching">
+      <div class="loading-animation">
+        <div class="search-pulse"></div>
+        <div class="search-pulse delay-1"></div>
+        <div class="search-pulse delay-2"></div>
+      </div>
+      <p>Searching across your documents...</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,161 @@
+<div class="page-container">
+  <div class="upload-page animate-fade-in-up">
+    <div class="upload-header">
+      <h1 class="page-title">Upload Document</h1>
+      <p class="page-subtitle">Upload and organize your documents with AI-powered analysis</p>
+    </div>
+
+    <!-- Success State -->
+    <div class="upload-success glass-card-static" *ngIf="uploadSuccess">
+      <div class="success-icon">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <h2>Upload Successful!</h2>
+      <p>Your document is being processed. AI analysis will begin shortly.</p>
+      <div class="success-actions">
+        <a routerLink="/documents" class="btn btn-primary">View Documents</a>
+        <button class="btn btn-secondary" (click)="uploadSuccess = false; removeFile()">Upload Another</button>
+      </div>
+    </div>
+
+    <form *ngIf="!uploadSuccess" [formGroup]="uploadForm" (ngSubmit)="onSubmit()" class="upload-form-layout">
+      <!-- Left Column - File Upload -->
+      <div class="upload-left">
+        <!-- Dropzone -->
+        <div
+          class="dropzone glass-card-static"
+          [class.drag-over]="isDragOver"
+          [class.has-file]="selectedFile"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)"
+        >
+          <div *ngIf="!selectedFile" class="dropzone-content">
+            <div class="dropzone-icon">
+              <mat-icon>cloud_upload</mat-icon>
+            </div>
+            <h3>Drag & drop your file here</h3>
+            <p>or click to browse from your computer</p>
+            <input type="file" id="file-input" class="file-input" (change)="onFileSelect($event)" />
+            <label for="file-input" class="btn btn-primary">
+              <mat-icon>attach_file</mat-icon>
+              Choose File
+            </label>
+            <p class="file-limits">Max file size: 50MB · PDF, DOCX, XLSX, PPTX, TXT, MD, images</p>
+          </div>
+
+          <div *ngIf="selectedFile" class="file-preview">
+            <div class="file-preview-icon" [style.color]="selectedFile.name | fileIcon:'color'">
+              <mat-icon>{{ selectedFile.name | fileIcon }}</mat-icon>
+            </div>
+            <div class="file-preview-info">
+              <span class="file-preview-name">{{ selectedFile.name }}</span>
+              <span class="file-preview-size">{{ selectedFile.size | fileSize }}</span>
+            </div>
+            <button type="button" class="btn-icon" (click)="removeFile()" *ngIf="!isUploading">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <!-- Upload Progress -->
+          <div *ngIf="isUploading" class="upload-progress">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="uploadProgress"></div>
+            </div>
+            <span class="progress-text">Uploading... {{ uploadProgress }}%</span>
+          </div>
+        </div>
+
+        <!-- Error -->
+        <div class="upload-error" *ngIf="uploadError">
+          <mat-icon>error</mat-icon>
+          <span>{{ uploadError }}</span>
+        </div>
+      </div>
+
+      <!-- Right Column - Details -->
+      <div class="upload-right glass-card-static">
+        <h2 class="form-section-title">Document Details</h2>
+
+        <div class="form-group">
+          <label class="form-label" for="title">Title *</label>
+          <input id="title" type="text" class="form-input" formControlName="title"
+                 placeholder="Enter document title" [class.error]="f['title'].touched && f['title'].invalid" />
+          <span class="form-error" *ngIf="f['title'].touched && f['title'].errors?.['required']">Title is required</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Description</label>
+          <textarea id="description" class="form-input" formControlName="description"
+                    placeholder="Add a description..." rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="category">Category</label>
+          <select id="category" class="form-select" formControlName="categoryId">
+            <option value="">Select category</option>
+            <option value="reports">Reports</option>
+            <option value="presentations">Presentations</option>
+            <option value="spreadsheets">Spreadsheets</option>
+            <option value="documents">Documents</option>
+            <option value="images">Images</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tags</label>
+          <div class="tags-input-wrapper">
+            <div class="tags-display">
+              <span *ngFor="let tag of tags" class="tag-chip">
+                {{ tag }}
+                <button type="button" (click)="removeTag(tag)"><mat-icon>close</mat-icon></button>
+              </span>
+            </div>
+            <input type="text" class="form-input" placeholder="Add a tag and press Enter"
+                   [(ngModel)]="tagInput" [ngModelOptions]="{standalone: true}"
+                   (keydown.enter)="$event.preventDefault(); addTag()" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Access Level</label>
+          <div class="access-options">
+            <label class="access-option" [class.selected]="f['accessLevel'].value === 'private'">
+              <input type="radio" formControlName="accessLevel" value="private" />
+              <mat-icon>lock</mat-icon>
+              <div>
+                <span class="access-title">Private</span>
+                <span class="access-desc">Only you can access</span>
+              </div>
+            </label>
+            <label class="access-option" [class.selected]="f['accessLevel'].value === 'department'">
+              <input type="radio" formControlName="accessLevel" value="department" />
+              <mat-icon>group</mat-icon>
+              <div>
+                <span class="access-title">Department</span>
+                <span class="access-desc">Your team can access</span>
+              </div>
+            </label>
+            <label class="access-option" [class.selected]="f['accessLevel'].value === 'public'">
+              <input type="radio" formControlName="accessLevel" value="public" />
+              <mat-icon>public</mat-icon>
+              <div>
+                <span class="access-title">Public</span>
+                <span class="access-desc">Everyone can access</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" routerLink="/documents">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="isUploading">
+            <mat-icon>cloud_upload</mat-icon>
+            {{ isUploading ? 'Uploading...' : 'Upload Document' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

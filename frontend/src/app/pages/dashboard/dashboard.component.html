@@ -1,0 +1,146 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="dashboard-header animate-fade-in-up">
+    <div>
+      <h1 class="page-title">Welcome back! 👋</h1>
+      <p class="page-subtitle">Here's what's happening with your documents today</p>
+    </div>
+    <a routerLink="/documents/upload" class="btn btn-primary">
+      <mat-icon>cloud_upload</mat-icon>
+      Upload Document
+    </a>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid stagger-children">
+    <div class="stat-card animate-fade-in-up">
+      <div class="stat-icon blue">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalDocuments | number }}</span>
+        <span class="stat-label">Total Documents</span>
+      </div>
+      <div class="stat-trend positive">
+        <mat-icon>trending_up</mat-icon>
+        <span>12%</span>
+      </div>
+    </div>
+
+    <div class="stat-card animate-fade-in-up">
+      <div class="stat-icon purple">
+        <mat-icon>cloud_upload</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.recentUploads }}</span>
+        <span class="stat-label">Uploads This Week</span>
+      </div>
+      <div class="stat-trend positive">
+        <mat-icon>trending_up</mat-icon>
+        <span>8%</span>
+      </div>
+    </div>
+
+    <div class="stat-card animate-fade-in-up">
+      <div class="stat-icon cyan">
+        <mat-icon>smart_toy</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.aiSummaries }}</span>
+        <span class="stat-label">AI Summaries</span>
+      </div>
+      <div class="stat-trend positive">
+        <mat-icon>trending_up</mat-icon>
+        <span>24%</span>
+      </div>
+    </div>
+
+    <div class="stat-card animate-fade-in-up">
+      <div class="stat-icon emerald">
+        <mat-icon>cloud</mat-icon>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.storageUsed | fileSize }}</span>
+        <span class="stat-label">Storage Used</span>
+      </div>
+      <div class="stat-trend neutral">
+        <span>of 50 GB</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <section class="quick-actions-section animate-fade-in-up">
+    <h2 class="section-title">Quick Actions</h2>
+    <div class="quick-actions-grid">
+      <a *ngFor="let action of quickActions" [routerLink]="action.route" class="quick-action-card">
+        <div class="qa-icon" [style.background]="action.gradient">
+          <mat-icon>{{ action.icon }}</mat-icon>
+        </div>
+        <span class="qa-label">{{ action.label }}</span>
+        <mat-icon class="qa-arrow">arrow_forward</mat-icon>
+      </a>
+    </div>
+  </section>
+
+  <!-- Content Grid -->
+  <div class="content-grid">
+    <!-- Recent Documents -->
+    <section class="recent-docs-section glass-card-static animate-fade-in-up">
+      <div class="section-header">
+        <h2 class="section-title">Recent Documents</h2>
+        <a routerLink="/documents" class="btn btn-ghost btn-sm">
+          View All
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
+      </div>
+
+      <div class="docs-list" *ngIf="!isLoading">
+        <a *ngFor="let doc of recentDocuments" [routerLink]="['/documents', doc.uuid]" class="doc-item">
+          <div class="doc-icon" [style.color]="doc.fileName | fileIcon:'color'">
+            <mat-icon>{{ doc.fileName | fileIcon }}</mat-icon>
+          </div>
+          <div class="doc-info">
+            <span class="doc-title">{{ doc.title }}</span>
+            <span class="doc-meta">{{ doc.fileSize | fileSize }} · {{ doc.createdAt | timeAgo }}</span>
+          </div>
+          <div class="doc-badges">
+            <span class="badge badge-primary" *ngIf="doc.aiProcessed">
+              <mat-icon>auto_awesome</mat-icon>
+              AI
+            </span>
+          </div>
+        </a>
+      </div>
+
+      <div class="skeleton-list" *ngIf="isLoading">
+        <div *ngFor="let i of [1,2,3,4,5]" class="skeleton-item">
+          <div class="skeleton" style="width:40px;height:40px;border-radius:10px"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <div class="skeleton" style="width:70%;height:14px"></div>
+            <div class="skeleton" style="width:40%;height:12px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Feed -->
+    <section class="activity-section glass-card-static animate-fade-in-up">
+      <div class="section-header">
+        <h2 class="section-title">Recent Activity</h2>
+      </div>
+
+      <div class="activity-list">
+        <div *ngFor="let item of activityItems" class="activity-item">
+          <div class="activity-icon" [attr.data-color]="item.color">
+            <mat-icon>{{ item.icon }}</mat-icon>
+          </div>
+          <div class="activity-info">
+            <p class="activity-text">{{ item.text }}</p>
+            <span class="activity-time">{{ item.time }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

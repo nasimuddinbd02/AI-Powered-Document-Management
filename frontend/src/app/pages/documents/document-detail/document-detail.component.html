@@ -1,0 +1,199 @@
+<div class="page-container" *ngIf="!isLoading && document">
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb animate-fade-in">
+    <a routerLink="/documents">Documents</a>
+    <mat-icon>chevron_right</mat-icon>
+    <span>{{ document.title }}</span>
+  </nav>
+
+  <!-- Header -->
+  <div class="detail-header animate-fade-in-up">
+    <div class="header-left">
+      <div class="file-icon-large" [style.color]="document.fileName | fileIcon:'color'">
+        <mat-icon>{{ document.fileName | fileIcon }}</mat-icon>
+      </div>
+      <div class="header-info">
+        <h1 class="document-title">{{ document.title }}</h1>
+        <div class="document-meta-row">
+          <span class="meta-item"><mat-icon>person</mat-icon>{{ document.owner?.name }}</span>
+          <span class="meta-item"><mat-icon>schedule</mat-icon>{{ document.createdAt | timeAgo }}</span>
+          <span class="meta-item"><mat-icon>straighten</mat-icon>{{ document.fileSize | fileSize }}</span>
+          <span class="meta-item"><mat-icon>download</mat-icon>{{ document.downloadCount }} downloads</span>
+        </div>
+        <div class="document-tags">
+          <span *ngFor="let tag of document.tags" class="doc-tag" [style.background]="tag.color + '20'" [style.color]="tag.color">
+            {{ tag.name }}
+          </span>
+          <span class="badge" [ngClass]="{
+            'badge-primary': document.accessLevel === 'public',
+            'badge-warning': document.accessLevel === 'department',
+            'badge-danger': document.accessLevel === 'private'
+          }">
+            <mat-icon>{{ getAccessIcon(document.accessLevel) }}</mat-icon>
+            {{ getAccessLabel(document.accessLevel) }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="downloadDocument()">
+        <mat-icon>download</mat-icon>
+        Download
+      </button>
+      <button class="btn btn-secondary" *ngIf="!document.aiProcessed" (click)="generateSummary()" [disabled]="isSummarizing">
+        <mat-icon>auto_awesome</mat-icon>
+        {{ isSummarizing ? 'Generating...' : 'AI Summary' }}
+      </button>
+      <button class="btn-icon" [matMenuTriggerFor]="actionMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #actionMenu="matMenu">
+        <button mat-menu-item><mat-icon>share</mat-icon><span>Share</span></button>
+        <button mat-menu-item><mat-icon>edit</mat-icon><span>Edit Details</span></button>
+        <button mat-menu-item (click)="deleteDocument()"><mat-icon>delete</mat-icon><span>Delete</span></button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <!-- Content Tabs -->
+  <div class="detail-content animate-fade-in-up">
+    <div class="tab-nav">
+      <button class="tab-btn" [class.active]="activeTab === 0" (click)="activeTab = 0">
+        <mat-icon>info</mat-icon> Overview
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 1" (click)="activeTab = 1">
+        <mat-icon>auto_awesome</mat-icon> AI Insights
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 2" (click)="activeTab = 2">
+        <mat-icon>history</mat-icon> Versions ({{ document.versions?.length || 0 }})
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 3" (click)="activeTab = 3">
+        <mat-icon>data_object</mat-icon> Metadata
+      </button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="tab-content" *ngIf="activeTab === 0">
+      <div class="overview-grid">
+        <div class="overview-card glass-card-static">
+          <h3 class="card-title">Description</h3>
+          <p class="card-text">{{ document.description || 'No description provided.' }}</p>
+        </div>
+        <div class="overview-card glass-card-static">
+          <h3 class="card-title">File Information</h3>
+          <div class="info-grid">
+            <div class="info-item"><span class="info-label">File Name</span><span class="info-value">{{ document.fileName }}</span></div>
+            <div class="info-item"><span class="info-label">File Type</span><span class="info-value">.{{ document.fileType }}</span></div>
+            <div class="info-item"><span class="info-label">File Size</span><span class="info-value">{{ document.fileSize | fileSize }}</span></div>
+            <div class="info-item"><span class="info-label">MIME Type</span><span class="info-value">{{ document.mimeType }}</span></div>
+            <div class="info-item"><span class="info-label">Created</span><span class="info-value">{{ document.createdAt | timeAgo }}</span></div>
+            <div class="info-item"><span class="info-label">Last Modified</span><span class="info-value">{{ document.updatedAt | timeAgo }}</span></div>
+            <div class="info-item"><span class="info-label">OCR Status</span><span class="info-value">{{ document.ocrCompleted ? 'Completed' : 'Pending' }}</span></div>
+            <div class="info-item"><span class="info-label">AI Processed</span><span class="info-value">{{ document.aiProcessed ? 'Yes' : 'No' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Insights Tab -->
+    <div class="tab-content" *ngIf="activeTab === 1">
+      <div class="ai-content" *ngIf="aiSummary">
+        <div class="ai-summary-card glass-card-static">
+          <div class="ai-header">
+            <mat-icon>auto_awesome</mat-icon>
+            <h3>AI Summary</h3>
+            <span class="badge badge-purple">AI Generated</span>
+          </div>
+          <p class="summary-text">{{ aiSummary.summary }}</p>
+          <div class="summary-meta">
+            <span><mat-icon>article</mat-icon>{{ aiSummary.wordCount }} words</span>
+            <span><mat-icon>schedule</mat-icon>{{ aiSummary.readingTime }} min read</span>
+            <span><mat-icon>language</mat-icon>{{ aiSummary.language?.toUpperCase() }}</span>
+          </div>
+        </div>
+
+        <div class="ai-details-grid">
+          <div class="glass-card-static ai-detail-card">
+            <h3 class="card-title">Key Topics</h3>
+            <div class="topics-list">
+              <span *ngFor="let topic of aiSummary.keyTopics" class="topic-chip">{{ topic }}</span>
+            </div>
+          </div>
+
+          <div class="glass-card-static ai-detail-card">
+            <h3 class="card-title">Entities</h3>
+            <div class="entities-list">
+              <div *ngFor="let entity of aiSummary.entities" class="entity-item">
+                <span class="entity-name">{{ entity.name }}</span>
+                <span class="entity-type badge badge-primary">{{ entity.type }}</span>
+                <div class="entity-relevance">
+                  <div class="relevance-bar" [style.width.%]="entity.relevance * 100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="no-ai" *ngIf="!aiSummary && !isSummarizing">
+        <mat-icon>auto_awesome</mat-icon>
+        <h3>No AI Summary Yet</h3>
+        <p>Generate an AI-powered summary to get key insights from this document.</p>
+        <button class="btn btn-primary" (click)="generateSummary()">
+          <mat-icon>auto_awesome</mat-icon>
+          Generate Summary
+        </button>
+      </div>
+
+      <div class="summarizing" *ngIf="isSummarizing">
+        <div class="ai-thinking">
+          <div class="thinking-dots">
+            <span></span><span></span><span></span>
+          </div>
+          <p>AI is analyzing your document...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Versions Tab -->
+    <div class="tab-content" *ngIf="activeTab === 2">
+      <div class="versions-timeline">
+        <div *ngFor="let version of document.versions; let i = index" class="version-item glass-card-static">
+          <div class="version-marker" [class.latest]="i === 0">
+            <span>v{{ version.versionNumber }}</span>
+          </div>
+          <div class="version-info">
+            <div class="version-header">
+              <h4 class="version-name">{{ version.fileName }}</h4>
+              <span class="version-size">{{ version.fileSize | fileSize }}</span>
+            </div>
+            <p class="version-summary" *ngIf="version.changeSummary">{{ version.changeSummary }}</p>
+            <div class="version-meta">
+              <span><mat-icon>person</mat-icon>{{ version.uploadedBy?.name }}</span>
+              <span><mat-icon>schedule</mat-icon>{{ version.createdAt | timeAgo }}</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metadata Tab -->
+    <div class="tab-content" *ngIf="activeTab === 3">
+      <div class="metadata-card glass-card-static">
+        <h3 class="card-title">Document Metadata</h3>
+        <div class="metadata-grid">
+          <div *ngFor="let key of getMetadataKeys()" class="metadata-item">
+            <span class="metadata-key">{{ key }}</span>
+            <span class="metadata-value">{{ document.metadata[key] }}</span>
+          </div>
+        </div>
+        <p *ngIf="getMetadataKeys().length === 0" class="no-metadata">No additional metadata available.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-loading-spinner *ngIf="isLoading" message="Loading document..."></app-loading-spinner>
