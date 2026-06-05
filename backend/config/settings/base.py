@@ -47,7 +47,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.common",
     "apps.accounts",
-    "apps.documents",
+    "apps.documents.apps.DocumentsConfig",
     "apps.search",
     "apps.ai_engine",
 ]

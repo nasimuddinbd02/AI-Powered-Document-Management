@@ -18,7 +18,7 @@ api_v1_patterns = [
     path("auth/", include("apps.accounts.urls")),
     path("documents/", include("apps.documents.urls")),
     path("search/", include("apps.search.urls")),
-    # path("ai/", include("apps.ai_engine.urls")),
+    path("ai/", include("apps.ai_engine.urls")),
 ]
 
 urlpatterns = [

@@ -1,53 +1,108 @@
+"""
+Document summarization service using LangChain + OpenAI.
+"""
+
+import json
+import logging
 import os
-from langchain.chat_models import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+
+from django.conf import settings
+
 from apps.ai_engine.models import AISummary
+
+logger = logging.getLogger(__name__)
+
 
 def generate_summary(document):
     """
-    Generates a summary for the given document and stores it in AISummary.
-    """
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
-        raise Exception("OpenAI API Key not configured")
+    Generates a structured AI summary for the given document.
 
-    llm = ChatOpenAI(temperature=0.3, model_name="gpt-4", openai_api_key=api_key)
-    
-    # We should extract text from the document. For simplicity, we assume
-    # document text extraction is done and available (e.g., via OCR or pdf parser)
-    # Since we are setting up, we'll fetch its text from its current version.
-    current_version = document.current_version
-    text_content = ""
-    if current_version and current_version.ocr_text:
-        text_content = current_version.ocr_text
-    else:
-        # Fallback to document description if no text
+    Uses the document's extracted_text (or description as fallback)
+    and produces a summary with key topics and entities.
+    """
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    api_key = getattr(settings, "OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+    model = getattr(settings, "OPENAI_MODEL", "gpt-4o-mini")
+
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is not configured.")
+
+    llm = ChatOpenAI(
+        temperature=0.3,
+        model=model,
+        openai_api_key=api_key,
+        max_tokens=2048,
+    )
+
+    # Get document text
+    text_content = document.extracted_text or ""
+    if not text_content.strip():
         text_content = document.description or "No content available."
 
-    prompt = PromptTemplate(
-        input_variables=["text"],
-        template="""Please read the following text and provide a comprehensive summary.
-        Also, extract the key topics as a list and entities as a dictionary.
-        
-        Text:
-        {text}
-        
-        Output format should be structured clearly."""
+    # Truncate to avoid token limits
+    if len(text_content) > 12000:
+        text_content = text_content[:12000] + "\n\n[Content truncated...]"
+
+    system_prompt = (
+        "You are a document analysis AI. Analyze the provided document text and "
+        "return a JSON object with the following structure:\n"
+        "{\n"
+        '  "summary": "A comprehensive 2-3 paragraph summary of the document",\n'
+        '  "key_topics": ["topic1", "topic2", ...],\n'
+        '  "entities": {\n'
+        '    "people": ["name1", "name2"],\n'
+        '    "organizations": ["org1", "org2"],\n'
+        '    "dates": ["date1", "date2"],\n'
+        '    "concepts": ["concept1", "concept2"]\n'
+        "  }\n"
+        "}\n\n"
+        "Return ONLY valid JSON, no other text."
     )
-    
-    chain = LLMChain(llm=llm, prompt=prompt)
-    summary_result = chain.run(text=text_content)
-    
-    # Normally we would parse JSON to get key_topics and entities.
-    # For now, we will store the raw output.
-    
-    summary = AISummary.objects.create(
-        document=document,
-        version_number=current_version.version_number if current_version else 1,
-        summary=summary_result,
-        key_topics=[],
-        entities={},
-        model_used="gpt-4"
-    )
-    return summary
+
+    try:
+        response = llm.invoke([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=f"Document Title: {document.title}\n\nDocument Text:\n{text_content}"),
+        ])
+
+        # Parse the response
+        response_text = response.content.strip()
+        # Remove markdown code fences if present
+        if response_text.startswith("```"):
+            response_text = response_text.split("\n", 1)[1] if "\n" in response_text else response_text[3:]
+            if response_text.endswith("```"):
+                response_text = response_text[:-3]
+            response_text = response_text.strip()
+
+        try:
+            parsed = json.loads(response_text)
+            summary_text = parsed.get("summary", response_text)
+            key_topics = parsed.get("key_topics", [])
+            entities = parsed.get("entities", {})
+        except json.JSONDecodeError:
+            summary_text = response_text
+            key_topics = []
+            entities = {}
+
+        summary = AISummary.objects.create(
+            document=document,
+            version_number=document.current_version,
+            summary=summary_text,
+            key_topics=key_topics,
+            entities=entities,
+            model_used=model,
+        )
+
+        # Update document AI status
+        document.ai_status = "completed"
+        document.save(update_fields=["ai_status"])
+
+        return summary
+
+    except Exception as e:
+        logger.error("Summary generation failed for document %s: %s", document.id, e, exc_info=True)
+        document.ai_status = "failed"
+        document.save(update_fields=["ai_status"])
+        raise

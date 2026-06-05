@@ -112,7 +112,7 @@ class FullTextSearchService:
         query_lower = query.lower()
 
         for doc in results:
-            score = 0
+            score = 1.0
             
             # 1. Exact phrase match gets a big boost
             if doc.title and query_lower in doc.title.lower():
@@ -134,7 +134,7 @@ class FullTextSearchService:
                 if doc.extracted_text and term in doc.extracted_text.lower():
                     score += 2
 
-            if score > 0:
+            if score >= 1.0:
                 scored.append((doc, score))
 
         scored.sort(key=lambda x: x[1], reverse=True)

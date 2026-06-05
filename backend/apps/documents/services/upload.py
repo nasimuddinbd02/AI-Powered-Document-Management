@@ -120,6 +120,9 @@ class DocumentUploadService:
         # Auto-extract file metadata
         self._extract_file_metadata(document, file)
 
+        # Auto-extract text content for AI processing
+        self._extract_text_content(document, file)
+
         logger.info("Document '%s' created successfully (UUID: %s)", title, document.uuid)
         return document
 
@@ -160,3 +163,76 @@ class DocumentUploadService:
                 key=key,
                 defaults={"value": value, "value_type": vtype},
             )
+
+    def _extract_text_content(self, document, file):
+        """
+        Extract text content from the uploaded file for AI processing.
+
+        Supports PDF (via PyPDF2) and plain text files.
+        """
+        try:
+            file.seek(0)  # Reset file pointer
+            text = ""
+
+            if document.file_type == Document.FileType.PDF:
+                try:
+                    import PyPDF2
+                    reader = PyPDF2.PdfReader(file)
+                    pages = []
+                    for page in reader.pages:
+                        page_text = page.extract_text()
+                        if page_text:
+                            pages.append(page_text)
+                    text = "\n\n".join(pages)
+
+                    # Store page count as metadata
+                    DocumentMetadata.objects.update_or_create(
+                        document=document,
+                        key="page_count",
+                        defaults={"value": str(len(reader.pages)), "value_type": "integer"},
+                    )
+                except ImportError:
+                    logger.warning("PyPDF2 not installed — cannot extract PDF text.")
+                except Exception as e:
+                    logger.warning("PDF text extraction failed for %s: %s", document.uuid, e)
+
+            elif document.file_type == Document.FileType.TXT:
+                try:
+                    text = file.read().decode("utf-8", errors="ignore")
+                except Exception:
+                    text = file.read().decode("latin-1", errors="ignore")
+
+            elif document.file_type == Document.FileType.CSV:
+                try:
+                    text = file.read().decode("utf-8", errors="ignore")
+                except Exception:
+                    text = file.read().decode("latin-1", errors="ignore")
+
+            elif document.file_type in (Document.FileType.DOC, Document.FileType.DOCX):
+                try:
+                    import docx
+                    doc = docx.Document(file)
+                    text = "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+                except ImportError:
+                    logger.warning("python-docx not installed — cannot extract DOCX text.")
+                except Exception as e:
+                    logger.warning("DOCX text extraction failed for %s: %s", document.uuid, e)
+
+            if text.strip():
+                document.extracted_text = text.strip()
+                document.save(update_fields=["extracted_text"])
+                logger.info(
+                    "Extracted %d chars of text from document %s",
+                    len(document.extracted_text), document.uuid,
+                )
+
+                # Store word count as metadata
+                word_count = len(text.split())
+                DocumentMetadata.objects.update_or_create(
+                    document=document,
+                    key="word_count",
+                    defaults={"value": str(word_count), "value_type": "integer"},
+                )
+
+        except Exception as e:
+            logger.error("Text extraction failed for document %s: %s", document.uuid, e)

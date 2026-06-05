@@ -113,7 +113,7 @@ class SemanticSearchService:
                 continue
 
             try:
-                emb = DocumentEmbedding.objects.select_related("document").get(id=embedding_id)
+                emb = DocumentEmbedding.objects.select_related("document__owner").get(id=embedding_id)
                 doc = emb.document
                 # Access check
                 if user and not user.is_staff:
@@ -127,6 +127,8 @@ class SemanticSearchService:
                     "chunk_text": emb.chunk_text,
                     "chunk_index": emb.chunk_index,
                     "score": float(score),
+                    "owner_name": doc.owner.full_name if hasattr(doc.owner, 'full_name') else doc.owner.get_full_name() if hasattr(doc.owner, 'get_full_name') else doc.owner.username,
+                    "owner_email": doc.owner.email,
                 })
             except DocumentEmbedding.DoesNotExist:
                 continue
@@ -140,7 +142,7 @@ class SemanticSearchService:
         """Brute-force cosine similarity search when FAISS is unavailable."""
         from apps.ai_engine.models import DocumentEmbedding
 
-        embeddings = DocumentEmbedding.objects.select_related("document").all()
+        embeddings = DocumentEmbedding.objects.select_related("document__owner").all()
 
         if user and not user.is_staff:
             from django.db.models import Q
@@ -156,10 +158,10 @@ class SemanticSearchService:
             return []
 
         for emb in embeddings:
-            if not emb.embedding_vector:
+            if not emb.embedding:
                 continue
             try:
-                emb_vec = np.array(emb.embedding_vector, dtype="float32")
+                emb_vec = np.array(emb.embedding, dtype="float32")
                 emb_norm = np.linalg.norm(emb_vec)
                 if emb_norm == 0:
                     continue
@@ -171,6 +173,8 @@ class SemanticSearchService:
                     "chunk_text": emb.chunk_text,
                     "chunk_index": emb.chunk_index,
                     "score": similarity,
+                    "owner_name": emb.document.owner.full_name if hasattr(emb.document.owner, 'full_name') else emb.document.owner.get_full_name() if hasattr(emb.document.owner, 'get_full_name') else emb.document.owner.username,
+                    "owner_email": emb.document.owner.email,
                 })
             except Exception:
                 continue
@@ -197,9 +201,7 @@ class SemanticSearchService:
                 chunk_index=i,
                 defaults={
                     "chunk_text": chunk,
-                    "embedding_vector": emb_vec,
-                    "embedding_model": settings.OPENAI_EMBEDDING_MODEL,
-                    "vector_dimension": len(emb_vec),
+                    "embedding": emb_vec,
                 },
             )
             embedding_ids.append(db_emb.id)

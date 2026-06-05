@@ -6,6 +6,11 @@ import { MatIconModule } from '@angular/material/icon';
 import { AIService } from '../../core/services/ai.service';
 import { ChatMessage, ChatResponse, SourceReference } from '../../core/models/ai.model';
 
+interface ConversationEntry {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 @Component({
   selector: 'app-ai-assistant',
   standalone: true,
@@ -23,14 +28,16 @@ export class AIAssistantComponent implements AfterViewChecked {
   currentMessage = '';
   isTyping = false;
   conversationId: string | undefined;
+  errorMessage = '';
   private shouldScroll = false;
+  private chatHistory: ConversationEntry[] = [];
 
   suggestedQuestions = [
-    'Summarize the Q4 Financial Report',
-    'What are the key milestones in the Product Roadmap?',
-    'Compare revenue growth across quarters',
-    'Find all documents related to marketing strategy',
-    'What are the main topics in the Employee Handbook?',
+    'What documents do I have uploaded?',
+    'Summarize my most recent document',
+    'What are the key topics across my documents?',
+    'Find information about my resume',
+    'What skills or experience are mentioned in my documents?',
   ];
 
   ngAfterViewChecked(): void {
@@ -42,9 +49,9 @@ export class AIAssistantComponent implements AfterViewChecked {
 
   sendMessage(content?: string): void {
     const message = content || this.currentMessage.trim();
-    if (!message) return;
+    if (!message || this.isTyping) return;
 
-    // Add user message
+    // Add user message to UI
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -54,9 +61,13 @@ export class AIAssistantComponent implements AfterViewChecked {
     this.messages.push(userMsg);
     this.currentMessage = '';
     this.isTyping = true;
+    this.errorMessage = '';
     this.shouldScroll = true;
 
-    // Send to API
+    // Track conversation history for multi-turn context
+    this.chatHistory.push({ role: 'user', content: message });
+
+    // Send to real backend API
     this.aiService.sendChatMessage({
       message,
       conversationId: this.conversationId
@@ -64,12 +75,14 @@ export class AIAssistantComponent implements AfterViewChecked {
       next: (response: ChatResponse) => {
         this.addAssistantMessage(response.message, response.sources);
         this.conversationId = response.conversationId;
+        this.chatHistory.push({ role: 'assistant', content: response.message });
       },
-      error: () => {
-        // Demo mock response
-        setTimeout(() => {
-          this.addAssistantMessage(this.getMockResponse(message), this.getMockSources());
-        }, 1500);
+      error: (err) => {
+        console.error('AI Chat Error:', err);
+        const errorText = err.error?.error || err.error?.message ||
+          'Sorry, I encountered an error connecting to the AI service. Please check that the backend is running and the OpenAI API key is configured.';
+        this.addAssistantMessage(errorText);
+        this.errorMessage = 'AI service error — check console for details.';
       }
     });
   }
@@ -90,6 +103,8 @@ export class AIAssistantComponent implements AfterViewChecked {
   clearChat(): void {
     this.messages = [];
     this.conversationId = undefined;
+    this.chatHistory = [];
+    this.errorMessage = '';
   }
 
   onKeyDown(event: KeyboardEvent): void {
@@ -110,21 +125,7 @@ export class AIAssistantComponent implements AfterViewChecked {
     return content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>')
-      .replace(/- /g, '• ');
-  }
-
-  private getMockResponse(question: string): string {
-    const responses: Record<string, string> = {
-      default: `Based on my analysis of your documents, here's what I found:\n\n**Key Findings:**\n\n1. **Revenue Growth**: The Q4 2024 report shows a 15% increase in revenue compared to Q3, driven primarily by the new product launch in October.\n\n2. **Cost Optimization**: Operating costs were reduced by 8% through process automation and vendor renegotiation.\n\n3. **Market Expansion**: Three new geographic markets were entered, contributing 12% of total revenue.\n\n**Recommendations:**\n- Continue investment in product R&D\n- Expand the automated marketing pipeline\n- Monitor cost efficiency ratios quarterly\n\nWould you like me to dive deeper into any of these areas?`
-    };
-    return responses['default'];
-  }
-
-  private getMockSources(): SourceReference[] {
-    return [
-      { documentId: '1', documentTitle: 'Q4 Financial Report 2024', excerpt: 'Revenue grew 15% quarter over quarter...', relevanceScore: 0.94, pageNumber: 12 },
-      { documentId: '2', documentTitle: 'Product Roadmap 2025', excerpt: 'October launch contributed significantly...', relevanceScore: 0.87, pageNumber: 4 },
-      { documentId: '5', documentTitle: 'Budget Analysis 2024', excerpt: 'Cost reduction initiatives achieved 8% savings...', relevanceScore: 0.79, pageNumber: 8 },
-    ];
+      .replace(/^- /gm, '• ')
+      .replace(/^\d+\.\s/gm, (match) => `<span class="list-number">${match}</span>`);
   }
 }

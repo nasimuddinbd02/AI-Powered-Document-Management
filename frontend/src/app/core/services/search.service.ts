@@ -27,7 +27,7 @@ export class SearchService {
           if (isSemantic) {
             return {
               documentId: item.document_uuid,
-              score: item.score || 1.0,
+              score: item.score ? (item.score > 1.0 ? 1.0 : item.score) : 1.0,
               highlights: item.chunk_text ? [item.chunk_text] : [],
               matchedContent: item.chunk_text || '',
               document: {
@@ -40,6 +40,11 @@ export class SearchService {
                 mimeType: 'text/plain',
                 aiProcessed: true,
                 ocrCompleted: false,
+                owner: {
+                  id: '',
+                  name: item.owner_name || item.owner_email?.split('@')[0] || 'Unknown',
+                  email: item.owner_email || ''
+                },
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
               }
@@ -49,11 +54,16 @@ export class SearchService {
           // Otherwise it is fulltext / hybrid which returns Document objects
           return {
             documentId: item.uuid || item.id,
-            score: item.score || 1.0,
+            score: item.score ? (item.score > 1.0 ? 1.0 : item.score) : 1.0,
             highlights: item.highlights || [],
-            matchedContent: item.matched_content || '',
+            matchedContent: item.matched_content || item.description || '',
             document: {
               ...item,
+              owner: typeof item.owner === 'object' ? item.owner : {
+                id: item.owner,
+                name: item.owner_name || item.owner_email?.split('@')[0] || 'Unknown',
+                email: item.owner_email || ''
+              },
               fileName: item.original_filename || item.fileName || 'unknown',
               fileType: item.file_type || item.fileType,
               fileSize: item.file_size || item.fileSize,

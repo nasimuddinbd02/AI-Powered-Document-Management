@@ -48,6 +48,9 @@ class SemanticSearchResultSerializer(serializers.Serializer):
     chunk_text = serializers.CharField()
     chunk_index = serializers.IntegerField()
     score = serializers.FloatField()
+    owner_name = serializers.CharField(required=False, default="")
+    owner_email = serializers.CharField(required=False, default="")
+
 
 
 class SearchHistorySerializer(serializers.ModelSerializer):
