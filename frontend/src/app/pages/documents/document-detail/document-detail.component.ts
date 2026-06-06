@@ -99,7 +99,8 @@ export class DocumentDetailComponent implements OnInit {
     if (!this.document) return;
     this.documentService.downloadDocument(this.document.uuid).subscribe({
       next: (blob) => {
-        const url = URL.createObjectURL(blob);
+        const mimeType = this.document?.mimeType || 'application/octet-stream';
+        const url = URL.createObjectURL(new Blob([blob], { type: mimeType }));
         const a = document.createElement('a');
         a.href = url;
         a.download = this.document!.fileName;

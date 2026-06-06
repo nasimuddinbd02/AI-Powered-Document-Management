@@ -171,9 +171,14 @@ class DocumentViewSet(viewsets.ModelViewSet):
             ip_address=_get_client_ip(request),
         )
 
+        import mimetypes
+        content_type, _ = mimetypes.guess_type(document.original_filename or document.file.name)
+        if not content_type:
+            content_type = "application/octet-stream"
+
         response = FileResponse(
             file_obj,
-            content_type="application/octet-stream",
+            content_type=content_type,
         )
         response["Content-Disposition"] = (
             f'attachment; filename="{document.original_filename or document.title}"'
